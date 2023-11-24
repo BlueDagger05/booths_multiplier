@@ -49,6 +49,7 @@ logic                      count_en;        // count enable
 
 dataPath DUT (.*);
 
+integer multplr, multplcnd;
 localparam timePeriod = 10; // setting timePeriod as 10units
  
 initial #5000 $finish();
@@ -79,11 +80,23 @@ initial begin: clock_generate
    forever #(timePeriod/2) clk = ~clk;
 end: clock_generate
 
+task counterStart();
+begin
+   clearCounter   = 1;
+   count_en       = 1;
+   @(posedge clk) decr = 1;
+end
+endtask: counterStart
+
 task loadMultiplier();
 begin
    clearM   = 1;
    loadM    = 1;
    @(posedge clk) data_in  = $urandom();
+                  multplr  = data_in;
+   $display(" +--------------------------------------+ ");
+   $display(" +------------loadMultiplier------------+ ");
+   $display(" +--------------------------------------+ ");
 end
 endtask: loadMultiplier
 
@@ -91,14 +104,37 @@ task loadMultiplicand();
 begin
    clearQ   = 1;
    loadQ    = 1;
-   @(posedge clk) data_in  = $urandom();
+   @(posedge clk) data_in   = $urandom();
+                  multplcnd = data_in;
+   $display(" +----------------------------------------+ ");
+   $display(" +------------loadMultiplicand------------+ ");
+   $display(" +----------------------------------------+ ");
 end
 endtask: loadMultiplicand
 
+task addsub();
+begin
+   addSub = 1;
+   clearA = 1;
+   loadA  = 1;
+   $display(" +------------------------------+ ");
+   $display(" +------------addSub------------+ ");
+   $display(" +------------------------------+ ");
+end
+endtask:addsub
+
 initial begin
-   repeat(5) loadMultiplier();
-   wait (loadM) repeat(5) loadMultiplicand();
+
+   fork
+   loadMultiplier();
+   @(posedge clk) repeat(16)counterStart();
+   join_any
+   
+   wait (loadM) loadMultiplicand();
+   addsub();
 end
 
-
+initial $monitor("@%0t, Multiplier = 0x%0h, Multiplicand = 0x%0h, eqz = %0h, q0 = %0h, qm1 = %0h", 
+                  $time, multplr, multplcnd,eqz, q0, qm1);
+                  
 endmodule
