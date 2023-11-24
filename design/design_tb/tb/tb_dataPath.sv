@@ -18,9 +18,87 @@
 // Additional Comments:
 // 
 //////////////////////////////////////////////////////////////////////////////////
+module tb_dataPath #(parameter DATA_WIDTH = 16)();
+logic                     eqz;     // eqz == HIGH, when counter completes counting
+logic                     qm1;     // Q-1 bit 
+logic                     q0;      // Q0 bit
+
+logic [DATA_WIDTH -1:0]   AregOut;
+logic [DATA_WIDTH -1:0]   QregOut;
+
+logic                      clk;
+logic [DATA_WIDTH -1:0]    data_in;
+
+logic                      loadA;   // A shift register signals
+logic                      clearA;  // A shift register signals
+logic                      shiftA;  // A shift register signals
+
+logic                      loadQ;   // Q shift register signals
+logic                      clearQ;  // Q shift register signals
+logic                      shiftQ;  // Q shift register signals
+
+logic                      loadM;   // M register signals
+logic                      clearM;  // M register signals
+
+logic                      clearff; // DFF signals
+logic                      addSub;  // performs add/sub
+
+logic                      clearCounter;    // counter clear
+logic                      decr;            // counter decrement
+logic                      count_en;        // count enable
+
+dataPath DUT (.*);
+
+localparam timePeriod = 10; // setting timePeriod as 10units
+ 
+initial #5000 $finish();
+
+initial begin: signal_reset
+      clk      = 0;
+      data_in  = 0;
+      loadA    = 0;
+      clearA   = 0;
+      shiftA   = 0;
+      
+      loadQ    = 0;
+      clearQ   = 0;
+      shiftQ   = 0;
+      
+      loadM    = 0;
+      clearM   = 0;
+      
+      clearff  = 0;
+      addSub   = 0;
+      
+      clearCounter = 0;
+      decr         = 0;
+      count_en     = 0;
+end:signal_reset
+
+initial begin: clock_generate
+   forever #(timePeriod/2) clk = ~clk;
+end: clock_generate
+
+task loadMultiplier();
+begin
+   clearM   = 1;
+   loadM    = 1;
+   @(posedge clk) data_in  = $urandom();
+end
+endtask: loadMultiplier
+
+task loadMultiplicand();
+begin
+   clearQ   = 1;
+   loadQ    = 1;
+   @(posedge clk) data_in  = $urandom();
+end
+endtask: loadMultiplicand
+
+initial begin
+   repeat(5) loadMultiplier();
+   wait (loadM) repeat(5) loadMultiplicand();
+end
 
 
-module tb_dataPath(
-
-    );
 endmodule
